@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- namespace:改mapper.xml映射文件的唯一标识并且必须和数据处理层的接口的路径相同-->
+<mapper namespace="com.example.springbootmybatistest.mapper.UserInfoMapper">
+    <!--   必须添加property属性 ，区别于是否加主键-->
+    <resultMap id="userInfo" type="com.example.springbootmybatistest.dao.UserInfo">
+        <id column="ID" property="id" javaType="int" ></id>
+        <result column="USER_NAME" property="user_Name" javaType="String" ></result>
+        <result column="USER_PASSWORD" property="user_Password" javaType="String" ></result>
+        <result column="USER_ACCCOUNT" property="user_Acccount" javaType="String" ></result>
+        <result column="IS_DEL" property="is_Del" javaType="String" ></result>
+    </resultMap>
+    <!--id的值必须和数据处理层的接口名一致-->
+    <select id="findAllUser" resultType="com.example.springbootmybatistest.dao.UserInfo">
+        select * from USERS_INFO
+    </select>
+    <select id="queryUserById"   parameterType="int" resultType="com.example.springbootmybatistest.dao.UserInfo">
+        select * from  USERS_INFO
+        <trim suffixOverrides="and"  prefixOverrides="and">
+            <where>
+                <if test="Id!=null">
+                    and Id = #{Id}
+                </if>
+            </where>
+        </trim>
+    </select>
+    <select id="queryUserByNamePassword" resultType="com.example.springbootmybatistest.dao.UserInfo">
+        select * from  USERS_INFO
+        where user_acccount=#{userName} and USER_PASSWORD=#{passWord} and IS_DEL=0
+    </select>
+
+    <insert id="addUser" parameterType="com.example.springbootmybatistest.dao.UserInfo" >
+        insert into  USERS_INFO values (${Id},#{User_Name},${User_Password},#{User_Acccount},#{Is_Del})
+    </insert>
+
+    <update id="updateUser" parameterType="com.example.springbootmybatistest.dao.UserInfo">
+        update USERS_INFO
+        <trim prefix="set" suffixOverrides=",">
+            <if test="User_Name!=null">
+                User_Name=#{User_Name},
+            </if>
+            <if test="User_Password!=null">
+                User_Password=#{User_Password},
+            </if>
+            <if test="User_Acccount!=null">
+                User_Acccount=#{User_Acccount},
+            </if>
+            <if test="Is_Del!=null">
+                Is_Del=#{Is_Del},
+            </if>
+        </trim>
+        where Id=#{Id}
+    </update>
+
+    <delete id="delUserById" parameterType="int">
+        delete from USERS_INFO where Id=#{Id}
+    </delete>
+
+    <delete id="delUser" parameterType="com.example.springbootmybatistest.dao.UserInfo">
+        delete from USERS_INFO
+        <where>
+            <if test="Id!=null">
+                and Id=#{Id}
+            </if>
+            <if test="User_Name!=null">
+                and User_Name=#{User_Name}
+            </if>
+            <if test="User_Password!=null">
+                and User_Password=#{User_Password}
+            </if>
+            <if test="Id!=null">
+                and User_Acccount=#{User_Acccount}
+            </if>
+            <if test="Id!=null">
+                and Is_Del=#{Is_Del}
+            </if>
+        </where>
+    </delete>
+
+    <select id="queryUserWithRole" resultType="com.example.springbootmybatistest.dao.userdao.UserRoleInfo">
+        SELECT UI.*, RI.ROLE_NAME, RI.ID ROLE_ID
+        FROM USERS_INFO UI, T_USER_ROLE UR, T_ROLE_INFO RI
+        WHERE UI.ID = UR.USER_ID
+          AND UR.ROLE_ID = RI.ID
+          AND UI.IS_DEL = 0
+          and ur.is_del = 0
+          and ri.is_del = 0
+    </select>
+
+    <select id="pageUser" resultType="com.example.springbootmybatistest.dao.UserInfo">
+        select t1.*
+        from (
+        select t0.*,rownum rn
+        from(
+        select t.*
+        from users_info t
+        order by id desc) t0) t1
+        where t1.rn>#{beginNumber} and t1.rn!=10 and <![CDATA[t1.rn<=#{endNumber}]]>
+    </select>
+    
+    <select id="getWinHout" statementType="CALLABLE" parameterType="java.util.Map">
+        {call P_WinHout(#{sc,mode=OUT,jdbcType=INTEGER})}
+    </select>
+
+    <select id="getHinHout" statementType="CALLABLE" parameterType="java.util.Map" >
+        {call  P_HWINHOUT(#{a,mode=IN},#{b,mode=IN},#{sc,mode=OUT,jdbcType=INTEGER},
+            #{userinfo,jdbcType=CURSOR,mode=OUT,javaType=ResultSet, resultMap=userInfo})}
+    </select>
+</mapper>
